@@ -1,0 +1,112 @@
+substitutions:
+  LED_PIN: GPIO7
+  LED_PROX: GPIO1
+
+
+esphome:
+  name: esphome-gdimmer-example
+
+esp32:
+  board: esp32-c3-devkitm-1
+  framework:
+    type: arduino
+
+
+# Enable logging
+logger:
+
+web_server:
+  port: 80
+
+api:
+
+ota:
+  platform: esphome
+
+wifi:
+  networks:
+  - ssid: "ssid"
+    password: "password"
+
+  ap:
+
+captive_portal:
+
+external_components:
+  - source: 
+      type: git
+      url: https://github.com/jcappaert/esphome-vcnl4040
+    components: [vcnl4040]
+  - source: 
+      type: git
+      url: https://github.com/jcappaert/esphome-gdimmer
+    components: [gdimmer]
+    refresh: 0s
+
+# -------------------- I2C (VCNL4040) --------------------
+i2c:
+  sda: GPIO4
+  scl: GPIO5
+  scan: true
+
+# VCNL4040: platform-style usage 
+sensor:
+  - platform: vcnl4040
+    address: 0x60
+    update_interval: 50ms
+    ambient:
+      name: "LED Bar Ambient Light"
+      id: als
+      filters:
+        - sliding_window_moving_average:
+            window_size: 6
+            send_every: 6
+
+    proximity:
+      name: "LED Bar Proximity"
+      id: prox
+      filters:
+        - sliding_window_moving_average:
+            window_size: 5
+            send_every: 1
+
+
+gdimmer:
+  id: prox_ctrl
+  sensor: prox          # <-- id of your VCNL4040 proximity sensor
+  light: bar_light      # <-- id of your monochromatic light
+  led: prox_led         # optional indicator output (GPIO1)
+
+  # Optional tuning (these are defaults; override only if needed)
+  toggle_high: 10
+  toggle_low: 3
+  cooldown_ms: 600
+  hold_time_ms: 1200
+  step_interval_ms: 60
+  dim_step: 0.03
+  b_min: 0.05
+  b_max: 1.0
+  blink_period_ms: 300
+  alternate_direction: true
+  rise_grace_ms: 900
+
+
+
+# -------------------- Outputs --------------------
+output:
+  - platform: ledc
+    id: led_pwm
+    pin: ${LED_PIN}              # MOSFET gate (series 100R; 100k pulldown on board)
+    frequency: 20000 Hz          # 20 kHz to avoid audible whine
+  - platform: gpio
+    id: prox_led
+    pin:
+      number: ${LED_PROX}
+
+
+light:
+  - platform: monochromatic
+    id: bar_light
+    name: "Reading Light"
+    output: led_pwm
+    default_transition_length: 100ms

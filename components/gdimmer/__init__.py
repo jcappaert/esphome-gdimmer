@@ -20,6 +20,7 @@ CONF_B_MIN           = "b_min"
 CONF_B_MAX           = "b_max"
 CONF_BLINK_PERIOD_MS = "blink_period_ms"
 CONF_ALT_DIRECTION   = "alternate_direction"
+CONF_RISE_GRACE_MS   = "rise_grace_ms"
 
 CONFIG_SCHEMA = cv.Schema({
     cv.GenerateID(): cv.declare_id(GestureDimmer),
@@ -38,6 +39,7 @@ CONFIG_SCHEMA = cv.Schema({
     cv.Optional(CONF_B_MAX, default=1.00):        cv.float_,
     cv.Optional(CONF_BLINK_PERIOD_MS, default=300): cv.positive_int,
     cv.Optional(CONF_ALT_DIRECTION, default=True): cv.boolean,
+    cv.Optional(CONF_RISE_GRACE_MS, default=900): cv.positive_int,
 }).extend(cv.COMPONENT_SCHEMA)
 
 async def to_code(config):
@@ -71,3 +73,4 @@ async def to_code(config):
         config[CONF_B_MAX],
         config[CONF_ALT_DIRECTION]
     ))
+    cg.add(var.set_rise_grace_ms(config[CONF_RISE_GRACE_MS]))

@@ -23,6 +23,7 @@ class GestureDimmer : public Component {
   void set_dimming_params(float dim_step, float b_min, float b_max, bool alternate_direction) {
     dim_step_ = dim_step; b_min_ = b_min; b_max_ = b_max; alternate_direction_ = alternate_direction;
   }
+  void set_rise_grace_ms(uint32_t rise_grace_ms) { rise_grace_ms_ = rise_grace_ms; }
 
   void setup() override;
   void loop() override;
@@ -65,6 +66,13 @@ class GestureDimmer : public Component {
   // led pulse (non-blocking)
   bool led_pulsing_{false};
   uint32_t led_pulse_off_ms_{0};
+
+  // telemetry
+  bool was_in_cooldown_{false};
+
+  // gesture detection aid for slower approaches
+  uint32_t last_below_low_ms_{0};
+  uint32_t rise_grace_ms_{900};  // allow up to ~0.9s between being below low and crossing high
 };
 
 }  // namespace gesture_dimmer
